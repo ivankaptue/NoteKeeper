@@ -38,7 +38,7 @@ public class SettingsActivity extends AppCompatActivity {
         @Override
         public void onResume() {
             super.onResume();
-            Map<String, ?> preferences = getPreferenceScreen().getSharedPreferences().getAll();
+          /*  Map<String, ?> preferences = getPreferenceScreen().getSharedPreferences().getAll();
             Preference pref;
             for (String key: preferences.keySet()) {
                 Object val = preferences.get(key);
@@ -47,13 +47,13 @@ public class SettingsActivity extends AppCompatActivity {
                     pref.setSummary(String.valueOf(val));
                 }
             }
-            getPreferenceScreen().getSharedPreferences().registerOnSharedPreferenceChangeListener(this);
+            getPreferenceScreen().getSharedPreferences().registerOnSharedPreferenceChangeListener(this);*/
         }
 
         @Override
         public void onPause() {
             super.onPause();
-            getPreferenceScreen().getSharedPreferences().unregisterOnSharedPreferenceChangeListener(this);
+//            getPreferenceScreen().getSharedPreferences().unregisterOnSharedPreferenceChangeListener(this);
         }
 
         @Override

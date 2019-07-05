@@ -9,28 +9,32 @@
 				app:key="user_display_name"
 				app:title="@string/pref_title_display_name"
 				app:defaultValue="@string/pref_default_display_name"
-		/>
+				app:useSimpleSummaryProvider="true"
+				android:icon="@drawable/ic_account_circle_black_24dp"/>
 
 		<EditTextPreference
 				app:key="user_email_address"
 				app:title="@string/pref_title_email_address"
 				app:defaultValue="@string/pref_default_email_address"
-				android:singleLine="true" android:inputType="textEmailAddress"/>
+				android:singleLine="true" android:inputType="textEmailAddress"
+				app:useSimpleSummaryProvider="true"
+				android:icon="@drawable/ic_mail_black_24dp"/>
 		<ListPreference
 				android:defaultValue="@string/pref_default_favorite_social"
 				android:title="@string/pref_title_favorite_social" android:entries="@array/pref_entries_favorite_social"
-				android:entryValues="@array/pref_values_favorite_social" android:key="user_favorite_social"/>
-
+				android:entryValues="@array/pref_values_favorite_social" android:key="user_favorite_social"
+				app:useSimpleSummaryProvider="true"
+				android:icon="@drawable/ic_favorite_black_24dp"/>
 	</PreferenceCategory>
 
 	<PreferenceCategory
 			app:title="@string/sync_header">
 
-		<SwitchPreferenceCompat
+		<SwitchPreference
 				app:key="sync"
-				app:title="@string/sync_title"/>
+				app:title="@string/sync_title" android:icon="@drawable/ic_sync_black_24dp"/>
 
-		<SwitchPreferenceCompat
+		<SwitchPreference
 				app:key="attachment"
 				app:title="@string/attachment_title"
 				app:summaryOn="@string/attachment_summary_on"
