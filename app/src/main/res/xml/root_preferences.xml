@@ -31,15 +31,17 @@
 			app:title="@string/sync_header">
 
 		<SwitchPreference
-				app:key="sync"
-				app:title="@string/sync_title" android:icon="@drawable/ic_sync_black_24dp"/>
+				app:key="pref_sync"
+				app:title="@string/sync_title"
+				android:icon="@drawable/ic_sync_black_24dp"
+				android:defaultValue="true"/>
 
 		<SwitchPreference
 				app:key="attachment"
 				app:title="@string/attachment_title"
 				app:summaryOn="@string/attachment_summary_on"
 				app:summaryOff="@string/attachment_summary_off"
-				app:dependency="sync"/>
+				app:dependency="pref_sync"/>
 
 	</PreferenceCategory>
 
