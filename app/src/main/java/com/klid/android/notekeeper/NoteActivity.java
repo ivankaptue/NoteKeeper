@@ -14,11 +14,11 @@ import android.view.MenuItem;
 import android.widget.EditText;
 import android.widget.SimpleCursorAdapter;
 import android.widget.Spinner;
+import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
-import androidx.constraintlayout.solver.widgets.Rectangle;
 import androidx.loader.app.LoaderManager;
 import androidx.loader.content.CursorLoader;
 import androidx.loader.content.Loader;
@@ -57,12 +57,7 @@ public class NoteActivity extends AppCompatActivity
     private boolean mCoursesQueryFinished;
     private boolean mNotesQueryFinished;
     private Uri mNoteUri;
-
-    @Override
-    protected void onDestroy() {
-        mDbOpenHelper.close();
-        super.onDestroy();
-    }
+    private boolean mIsDeleting = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -94,6 +89,12 @@ public class NoteActivity extends AppCompatActivity
             restoreOriginalNoteValues(savedInstanceState);
         }
         Log.d(TAG, "onCreate");
+    }
+
+    @Override
+    protected void onDestroy() {
+        mDbOpenHelper.close();
+        super.onDestroy();
     }
 
     private void loadCourseData() {
@@ -159,15 +160,17 @@ public class NoteActivity extends AppCompatActivity
     @Override
     protected void onPause() {
         super.onPause();
-        if (mIsCancelling) {
-            Log.i(TAG, "Cancelling note at position: " + mNoteId);
-            if (mIsNewNote) {
-                deleteNoteFromDatabase();
+        if (!mIsDeleting) {
+            if (mIsCancelling) {
+                Log.i(TAG, "Cancelling note at position: " + mNoteId);
+                if (mIsNewNote) {
+                    deleteNoteFromDatabase();
+                } else {
+                    restorePreviousNoteValues();
+                }
             } else {
-                restorePreviousNoteValues();
+                saveNote();
             }
-        } else {
-            saveNote();
         }
         Log.d(TAG, "onPause");
     }
@@ -325,12 +328,8 @@ public class NoteActivity extends AppCompatActivity
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
 
-        //noinspection SimplifiableIfStatement
         if (id == R.id.action_send_mail) {
             sendEmail();
             return true;
@@ -339,9 +338,37 @@ public class NoteActivity extends AppCompatActivity
             finish();
         } else if (id == R.id.action_next) {
 //            moveNext();
+        } else if (id == R.id.action_delete) {
+            actionDeleteNote();
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    private void actionDeleteNote() {
+        final String selection = NoteInfoEntry._ID + " = ?";
+        final String[] selectionArgs = {Integer.toString(mNoteId)};
+
+
+        AsyncTask task = new AsyncTask() {
+            @Override
+            protected Object doInBackground(Object[] objects) {
+                getContentResolver().delete(Notes.CONTENT_URI, selection, selectionArgs);
+                /*SQLiteDatabase db = mDbOpenHelper.getWritableDatabase();
+                db.delete(NoteInfoEntry.TABLE_NAME, selection, selectionArgs);*/
+                return null;
+            }
+
+            @Override
+            protected void onPostExecute(Object o) {
+                Log.d(TAG, "deleted");
+                mIsDeleting = true;
+                Toast.makeText(NoteActivity.this, "Deleted", Toast.LENGTH_LONG).show();
+                finish();
+            }
+        };
+
+        task.execute();
     }
 
     @Override

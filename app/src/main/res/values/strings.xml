@@ -55,4 +55,5 @@
 		<item>http://twitter.com</item>
 	</string-array>
 	<string name="pref_default_favorite_social">http://plus.google.com</string>
+	<string name="action_delete">Delete</string>
 </resources>
