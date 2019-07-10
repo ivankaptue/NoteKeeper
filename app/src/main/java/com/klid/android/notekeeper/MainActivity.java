@@ -29,6 +29,7 @@ import com.google.android.material.navigation.NavigationView;
 import com.google.android.material.snackbar.Snackbar;
 import com.klid.android.notekeeper.NoteKeeperDatabaseContract.CourseInfoEntry;
 import com.klid.android.notekeeper.NoteKeeperDatabaseContract.NoteInfoEntry;
+import com.klid.android.notekeeper.NoteKeeperProviderContract.Notes;
 
 import java.util.List;
 
@@ -246,7 +247,17 @@ public class MainActivity extends AppCompatActivity
     }
 
     private CursorLoader createLoaderNotes() {
-        return new CursorLoader(this) {
+
+        final String[] noteColumns = {
+            Notes._ID,
+            Notes.COLUMN_NOTE_TITLE,
+            Notes.COLUMN_COURSE_TITLE,
+        };
+
+        String noteOrderBy = Notes.COLUMN_COURSE_TITLE + "," + Notes.COLUMN_NOTE_TITLE;
+
+        return new CursorLoader(this, Notes.CONTENT_EXPANDED_URI, noteColumns, null, null, noteOrderBy);
+       /* return new CursorLoader(this) {
             @Override
             public Cursor loadInBackground() {
                 SQLiteDatabase db = mDBOpenHelper.getReadableDatabase();
@@ -261,11 +272,12 @@ public class MainActivity extends AppCompatActivity
                 // note_info join course_info on note_info.course_id = course_info.course_id;
                 String tableWithJoin = NoteInfoEntry.TABLE_NAME + " JOIN " +
                     CourseInfoEntry.TABLE_NAME + " ON " +
-                    CourseInfoEntry.getQName(CourseInfoEntry.COLUMN_COURSE_ID) + " = " + NoteInfoEntry.getQName(NoteInfoEntry.COLUMN_COURSE_ID);
+                    CourseInfoEntry.getQName(CourseInfoEntry.COLUMN_COURSE_ID) + " = " +
+                    NoteInfoEntry.getQName(NoteInfoEntry.COLUMN_COURSE_ID);
                 return db.query(tableWithJoin, noteColumns,
                     null, null, null, null, noteOrderBy);
             }
-        };
+        };*/
     }
 
     @Override
