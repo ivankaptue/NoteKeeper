@@ -7,7 +7,7 @@ import android.os.Parcelable;
  * Created by Jim.
  */
 
-public final class NoteInfo implements Parcelable {
+public final class NoteInfo implements Parcelable, Cloneable {
     private CourseInfo mCourse;
     private String mTitle;
     private String mText;
@@ -112,4 +112,10 @@ public final class NoteInfo implements Parcelable {
                 return new NoteInfo[size];
             }
         };
+
+
+    @Override
+    protected Object clone() throws CloneNotSupportedException {
+        return super.clone();
+    }
 }

@@ -27,7 +27,6 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.navigation.NavigationView;
 import com.google.android.material.snackbar.Snackbar;
-import com.klid.android.notekeeper.NoteKeeperDatabaseContract.CourseInfoEntry;
 import com.klid.android.notekeeper.NoteKeeperDatabaseContract.NoteInfoEntry;
 import com.klid.android.notekeeper.NoteKeeperProviderContract.Notes;
 
@@ -46,10 +45,13 @@ public class MainActivity extends AppCompatActivity
     private CourseRecyclerAdapter mCourseRecyclerAdapter;
     private GridLayoutManager mCoursesLayoutManager;
     private NoteKeeperOpenHelper mDBOpenHelper;
+    private Loader<Cursor> mNoteLoader;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Log.d(TAG, "onCreate");
+
         setContentView(R.layout.activity_main);
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -75,20 +77,35 @@ public class MainActivity extends AppCompatActivity
     }
 
     @Override
-    protected void onDestroy() {
-        mDBOpenHelper.close();
-        super.onDestroy();
-    }
-
-    @Override
     protected void onResume() {
         super.onResume();
-        LoaderManager.getInstance(this).initLoader(LOADER_NOTES, null, this);
+        Log.d(TAG, "onResume");
+        mNoteLoader = LoaderManager.getInstance(this).restartLoader(LOADER_NOTES, null, this);
+        /*if (loader != null) {
+            loader.forceLoad();
+        }*/
 //        loadNotes();
 //        mNoteRecyclerAdapter.notifyDataSetChanged();
 //        mAdapterNotes.notifyDataSetChanged();
 
         updateNavHeader();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        /*if (mNoteLoader != null) {
+            LoaderManager.getInstance(this).destroyLoader(mNoteLoader.getId());
+        }*/
+        Log.d(TAG, "onPause");
+    }
+
+    @Override
+    protected void onDestroy() {
+        mDBOpenHelper.close();
+
+        Log.d(TAG, "onDestroy");
+        super.onDestroy();
     }
 
     private void loadNotes() {

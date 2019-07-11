@@ -340,9 +340,17 @@ public class NoteActivity extends AppCompatActivity
 //            moveNext();
         } else if (id == R.id.action_delete) {
             actionDeleteNote();
+        } else if (id == R.id.action_set_reminder) {
+            showReminderNotification();
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    private void showReminderNotification() {
+        String noteTitle = mTextNoteTitle.getText().toString();
+        String noteText = mTextNoteText.getText().toString();
+        NoteReminderNotification.notify(this, noteTitle, noteText, mNoteId);
     }
 
     private void actionDeleteNote() {
