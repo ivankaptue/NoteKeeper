@@ -8,6 +8,14 @@
 		app:layout_behavior="@string/appbar_scrolling_view_behavior"
 		tools:showIn="@layout/activity_note"
 		tools:context=".NoteActivity">
+	<ProgressBar
+			style="?android:attr/progressBarStyleHorizontal"
+			android:layout_width="0dp"
+			android:layout_height="wrap_content"
+			android:id="@+id/progress_bar" android:max="100" android:layout_marginEnd="8dp"
+			app:layout_constraintEnd_toEndOf="parent" android:layout_marginStart="8dp"
+			app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toBottomOf="@+id/text_note_text"
+			android:layout_marginTop="32dp" tools:visibility="gone"/>
 	<Spinner
 			android:layout_width="0dp"
 			android:layout_height="wrap_content"
