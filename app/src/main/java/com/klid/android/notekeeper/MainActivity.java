@@ -5,6 +5,8 @@ import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.os.StrictMode;
 import android.util.Log;
 import android.view.Menu;
@@ -47,6 +49,7 @@ public class MainActivity extends AppCompatActivity
     private GridLayoutManager mCoursesLayoutManager;
     private NoteKeeperOpenHelper mDBOpenHelper;
     private Loader<Cursor> mNoteLoader;
+    private DrawerLayout mDrawer;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -66,11 +69,11 @@ public class MainActivity extends AppCompatActivity
 
         PreferenceManager.setDefaultValues(this, R.xml.root_preferences, false);
 
-        DrawerLayout drawer = findViewById(R.id.drawer_layout);
+        mDrawer = findViewById(R.id.drawer_layout);
 
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
-            this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
-        drawer.addDrawerListener(toggle);
+            this, mDrawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+        mDrawer.addDrawerListener(toggle);
         toggle.syncState();
 
         NavigationView navigationView = findViewById(R.id.nav_view);
@@ -104,6 +107,12 @@ public class MainActivity extends AppCompatActivity
 //        mAdapterNotes.notifyDataSetChanged();
 
         updateNavHeader();
+        openDrawer();
+    }
+
+    private void openDrawer() {
+        Handler handler = new Handler(Looper.getMainLooper());
+        handler.postDelayed(() -> mDrawer.openDrawer(GravityCompat.START), 1500);
     }
 
     @Override
