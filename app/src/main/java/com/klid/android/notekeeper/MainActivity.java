@@ -107,7 +107,7 @@ public class MainActivity extends AppCompatActivity
 //        mAdapterNotes.notifyDataSetChanged();
 
         updateNavHeader();
-        openDrawer();
+//        openDrawer();
     }
 
     private void openDrawer() {
@@ -257,6 +257,8 @@ public class MainActivity extends AppCompatActivity
             handleShare();
         } else if (id == R.id.nav_send) {
             handleSelection(R.string.nav_send_message);
+        } else if (id == R.id.nav_settings) {
+            startActivity(new Intent(this, SettingsActivity.class));
         }
 
         DrawerLayout drawer = findViewById(R.id.drawer_layout);

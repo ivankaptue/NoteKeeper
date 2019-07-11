@@ -77,4 +77,5 @@
 		Integer sed nisl sem, ullamcorper ornare lacus. Duis ac mauris sed massa congue volutpat. Donec sed erat sit
 		amet turpis viverra rhoncus sit amet nec magna. Donec lacinia ligula at libero volutpat volutpat nec nec tortor.
 	</string>
+	<string name="menu_header_other">Others</string>
 </resources>
