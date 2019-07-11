@@ -26,6 +26,8 @@ import com.klid.android.notekeeper.NoteKeeperDatabaseContract.NoteInfoEntry;
 import com.klid.android.notekeeper.NoteKeeperProviderContract.Courses;
 import com.klid.android.notekeeper.NoteKeeperProviderContract.Notes;
 
+import java.lang.ref.WeakReference;
+
 public class NoteActivity extends AppCompatActivity
     implements LoaderManager.LoaderCallbacks<Cursor> {
 
@@ -300,54 +302,7 @@ public class NoteActivity extends AppCompatActivity
     }
 
     private void createNewNote() {
-        AsyncTask<ContentValues, Integer, Uri> task = new AsyncTask<ContentValues, Integer, Uri>() {
-            private ProgressBar mProgressBar;
-
-            @Override
-            protected void onPreExecute() {
-                mProgressBar = findViewById(R.id.progress_bar);
-                mProgressBar.setVisibility(View.VISIBLE);
-                mProgressBar.setProgress(0);
-            }
-
-            @Override
-            protected Uri doInBackground(ContentValues... contentValues) {
-                Log.d(TAG, "call doInBackground " + Thread.currentThread().getId());
-
-                ContentValues insertValues = contentValues[0];
-                Uri uri = getContentResolver().insert(Notes.CONTENT_URI, insertValues);
-
-                for (int i = 1; i <= 100; i++) {
-                    simulateLongRunningWork();
-                    publishProgress(i);
-                }
-
-                return uri;
-            }
-
-            @Override
-            protected void onProgressUpdate(Integer... values) {
-                int value = values[0];
-                mProgressBar.setProgress(value);
-            }
-
-            private void simulateLongRunningWork() {
-                try {
-                    Thread.sleep(50);
-                } catch (InterruptedException e) {
-                }
-            }
-
-            @Override
-            protected void onPostExecute(Uri uri) {
-                Log.d(TAG, "call onPostExecute " + Thread.currentThread().getId());
-
-                mNoteUri = uri;
-                mNoteId = (int) ContentUris.parseId(mNoteUri);
-                displaySnackBar(uri.toString());
-                mProgressBar.setVisibility(View.GONE);
-            }
-        };
+        AsyncTask<ContentValues, Integer, Uri> task = new CreateNoteTask(this);
 
         ContentValues values = new ContentValues();
         values.put(Notes.COLUMN_COURSE_ID, "");
@@ -561,6 +516,69 @@ public class NoteActivity extends AppCompatActivity
             if (mNoteCursor != null) mNoteCursor.close();
         } else if (loader.getId() == LOADER_COURSES) {
             mAdapterCourses.changeCursor(null);
+        }
+    }
+
+    public static class CreateNoteTask extends AsyncTask<ContentValues, Integer, Uri> {
+
+        private WeakReference<NoteActivity> mActivityReference;
+
+        public CreateNoteTask(NoteActivity ctx) {
+            mActivityReference = new WeakReference<>(ctx);
+        }
+
+        @Override
+        protected void onPreExecute() {
+            NoteActivity activity= mActivityReference.get();
+            ProgressBar mProgressBar = activity.findViewById(R.id.progress_bar);
+            mProgressBar.setVisibility(View.VISIBLE);
+            mProgressBar.setProgress(0);
+        }
+
+        @Override
+        protected Uri doInBackground(ContentValues... contentValues) {
+            NoteActivity activity= mActivityReference.get();
+            Log.d(activity.TAG, "call doInBackground " + Thread.currentThread().getId());
+
+            ContentValues insertValues = contentValues[0];
+            Uri uri = activity.getContentResolver().insert(Notes.CONTENT_URI, insertValues);
+
+            for (int i = 1; i <= 100; i++) {
+                simulateLongRunningWork();
+                publishProgress(i);
+            }
+
+            return uri;
+        }
+
+        @Override
+        protected void onProgressUpdate(Integer... values) {
+            ProgressBar progressBar = getProgressBar();
+            int value = values[0];
+            progressBar.setProgress(value);
+        }
+
+        private void simulateLongRunningWork() {
+            try {
+                Thread.sleep(50);
+            } catch (InterruptedException e) {
+            }
+        }
+
+        @Override
+        protected void onPostExecute(Uri uri) {
+            NoteActivity activity= mActivityReference.get();
+            Log.d(activity.TAG, "call onPostExecute " + Thread.currentThread().getId());
+
+            activity.mNoteUri = uri;
+            activity.mNoteId = (int) ContentUris.parseId(activity.mNoteUri);
+            activity.displaySnackBar(uri.toString());
+            getProgressBar().setVisibility(View.GONE);
+        }
+
+        private ProgressBar getProgressBar() {
+            NoteActivity activity = mActivityReference.get();
+            return activity.findViewById(R.id.progress_bar);
         }
     }
 }
