@@ -51,6 +51,9 @@ public class NoteReminderNotification {
         Intent noteActivityIntent = new Intent(context, NoteActivity.class);
         noteActivityIntent.putExtra(NoteActivity.NOTE_ID, noteId);
 
+        Intent mainIntent = new Intent(context, MainActivity.class);
+        mainIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+
         final NotificationCompat.Builder builder = new NotificationCompat.Builder(context, "")
 
             // Set appropriate defaults for the notification light, sound,
@@ -107,10 +110,10 @@ public class NoteReminderNotification {
 //                    new Intent(Intent.ACTION_VIEW, Uri.parse("http://www.google.com")),
 //                    PendingIntent.FLAG_UPDATE_CURRENT))
             .setContentIntent(
-                PendingIntent.getActivity(
+                PendingIntent.getActivities(
                     context,
                     0,
-                    noteActivityIntent,
+                    new Intent[]{mainIntent, noteActivityIntent},
                     PendingIntent.FLAG_UPDATE_CURRENT))
 
             .addAction(

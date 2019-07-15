@@ -17,6 +17,11 @@ public class SettingsReminderNotification {
 
     public static void notify(final Context context) {
         String contentText = "Hey, it seems you have forget to change your username in application settings. Don't forget to change it before using application.";
+        final Intent mainActivityIntent = new Intent(context, MainActivity.class);
+        mainActivityIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+
+        final Intent settingsIntent = new Intent(context, SettingsActivity.class);
+
 
         final NotificationCompat.Builder builder = new NotificationCompat.Builder(context, "")
 
@@ -65,10 +70,10 @@ public class SettingsReminderNotification {
             // Set the pending intent to be initiated when the user touches
             // the notification.
             .setContentIntent(
-                PendingIntent.getActivity(
+                PendingIntent.getActivities(
                     context,
                     0,
-                    new Intent(context, SettingsActivity.class),
+                    new Intent[]{mainActivityIntent, settingsIntent},
                     PendingIntent.FLAG_UPDATE_CURRENT))
 
             // Automatically dismiss the notification when it is touched.
