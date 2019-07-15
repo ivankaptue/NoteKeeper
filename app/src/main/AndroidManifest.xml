@@ -12,6 +12,11 @@
 			android:roundIcon="@mipmap/ic_launcher_round"
 			android:supportsRtl="true"
 			android:theme="@style/AppTheme">
+		<service
+				android:name=".NoteBackupService"
+				android:exported="false">
+		</service>
+
 		<provider
 				android:name=".NoteKeeperProvider"
 				android:authorities="com.klid.android.notekeeper.provider"
@@ -42,9 +47,12 @@
 		<activity
 				android:name=".SettingsActivity"
 				android:label="@string/title_activity_settings">
-			<!--<meta-data
+
+			<!--
+                <meta-data
 					android:name="android.support.PARENT_ACTIVITY"
-					android:value=".MainActivity"/>-->
+					android:value=".MainActivity"/>
+            -->
 		</activity>
 	</application>
 

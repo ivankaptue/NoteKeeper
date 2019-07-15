@@ -529,7 +529,7 @@ public class NoteActivity extends AppCompatActivity
 
         @Override
         protected void onPreExecute() {
-            NoteActivity activity= mActivityReference.get();
+            NoteActivity activity = mActivityReference.get();
             ProgressBar mProgressBar = activity.findViewById(R.id.progress_bar);
             mProgressBar.setVisibility(View.VISIBLE);
             mProgressBar.setProgress(0);
@@ -537,7 +537,7 @@ public class NoteActivity extends AppCompatActivity
 
         @Override
         protected Uri doInBackground(ContentValues... contentValues) {
-            NoteActivity activity= mActivityReference.get();
+            NoteActivity activity = mActivityReference.get();
             Log.d(activity.TAG, "call doInBackground " + Thread.currentThread().getId());
 
             ContentValues insertValues = contentValues[0];
@@ -558,16 +558,16 @@ public class NoteActivity extends AppCompatActivity
             progressBar.setProgress(value);
         }
 
-        private void simulateLongRunningWork() {
+        public static void simulateLongRunningWork() {
             try {
-                Thread.sleep(50);
-            } catch (InterruptedException e) {
+                Thread.sleep(1000);
+            } catch (InterruptedException ignored) {
             }
         }
 
         @Override
         protected void onPostExecute(Uri uri) {
-            NoteActivity activity= mActivityReference.get();
+            NoteActivity activity = mActivityReference.get();
             Log.d(activity.TAG, "call onPostExecute " + Thread.currentThread().getId());
 
             activity.mNoteUri = uri;
