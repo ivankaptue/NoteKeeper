@@ -79,4 +79,5 @@
 	</string>
 	<string name="menu_header_other">Others</string>
 	<string name="action_backup">Backup notes</string>
+	<string name="action_upload_notes">Upload notes</string>
 </resources>
