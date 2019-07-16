@@ -10,7 +10,7 @@
 			android:label="@string/app_name"
 			android:roundIcon="@mipmap/ic_launcher_round"
 			android:supportsRtl="true"
-			android:theme="@style/AppTheme" tools:ignore="GoogleAppIndexingWarning">
+			android:theme="@style/AppTheme">
 		<service
 				android:name=".NoteUploaderJobService"
 				android:enabled="true"
@@ -37,6 +37,15 @@
 				<action android:name="android.intent.action.MAIN"/>
 
 				<category android:name="android.intent.category.LAUNCHER"/>
+
+				<action android:name="android.intent.action.VIEW"/>
+
+				<category android:name="android.intent.category.DEFAULT"/>
+				<category android:name="android.intent.category.BROWSABLE"/>
+
+				<!-- Accepts URIs that begin with "http://www.example.com” -->
+				<data android:scheme="http"
+					  android:host="www.example.com"/>
 			</intent-filter>
 		</activity>
 		<activity
