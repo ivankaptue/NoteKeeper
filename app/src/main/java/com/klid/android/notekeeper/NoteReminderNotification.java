@@ -11,6 +11,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Build;
 import androidx.core.app.NotificationCompat;
+import androidx.core.content.ContextCompat;
 
 /**
  * Helper class for showing and canceling note reminder
@@ -58,6 +59,8 @@ public class NoteReminderNotification {
         backupServiceIntent.putExtra(NoteBackupService.EXTRA_COURSE_ID, NoteBackup.ALL_COURSES);
 
         final NotificationCompat.Builder builder = new NotificationCompat.Builder(context, "")
+            // set color of app name in notification
+            .setColor(ContextCompat.getColor(context, R.color.app_orange))
 
             // Set appropriate defaults for the notification light, sound,
             // and vibration.

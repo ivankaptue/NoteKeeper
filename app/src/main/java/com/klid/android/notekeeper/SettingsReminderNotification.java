@@ -8,6 +8,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
 import androidx.core.app.NotificationCompat;
+import androidx.core.content.ContextCompat;
 
 public class SettingsReminderNotification {
     /**
@@ -16,6 +17,7 @@ public class SettingsReminderNotification {
     private static final String NOTIFICATION_TAG = "SettingsReminder";
 
     public static void notify(final Context context) {
+        String contentTitle = "Change your username";
         String contentText = "Hey, it seems you have forget to change your username in application settings. Don't forget to change it before using application.";
         final Intent mainActivityIntent = new Intent(context, MainActivity.class);
         mainActivityIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -24,7 +26,8 @@ public class SettingsReminderNotification {
 
 
         final NotificationCompat.Builder builder = new NotificationCompat.Builder(context, "")
-
+            // set color of app name in notification
+            .setColor(ContextCompat.getColor(context, R.color.app_orange))
             // Set appropriate defaults for the notification light, sound,
             // and vibration.
             .setDefaults(Notification.DEFAULT_ALL)
@@ -32,14 +35,14 @@ public class SettingsReminderNotification {
             // Set required fields, including the small icon, the
             // notification title, and text.
             .setSmallIcon(R.drawable.ic_stat_settings_reminder)
-            .setContentTitle("NoteKeeper")
+            .setContentTitle(contentTitle)
             .setContentText(contentText)
 
             // Show expanded text content on devices running Android 4.1 or
             // later.
             .setStyle(new NotificationCompat.BigTextStyle()
                 .bigText(contentText)
-                .setBigContentTitle("NoteKeeper")
+                .setBigContentTitle(contentTitle)
             )
             // All fields below this line are optional.
 

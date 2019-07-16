@@ -7,8 +7,9 @@
 	<androidx.cardview.widget.CardView
 			android:layout_width="match_parent"
 			android:layout_height="wrap_content" android:id="@+id/card_view" app:cardElevation="4dp"
-			app:contentPadding="16dp" app:cardCornerRadius="4dp" app:cardUseCompatPadding="true"
-			android:foreground="?attr/selectableItemBackgroundBorderless">
+			app:contentPadding="16dp" app:cardCornerRadius="2dp" app:cardUseCompatPadding="true"
+			android:foreground="?attr/selectableItemBackgroundBorderless" android:layout_marginRight="5dp"
+			android:layout_marginLeft="5dp">
 		<androidx.constraintlayout.widget.ConstraintLayout
 				android:layout_width="match_parent"
 				android:layout_height="wrap_content">
