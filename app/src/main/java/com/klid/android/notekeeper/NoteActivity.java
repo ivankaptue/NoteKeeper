@@ -253,6 +253,7 @@ public class NoteActivity extends AppCompatActivity
         String noteText = mNoteCursor.getString(mNoteTextPos);
 //        List<CourseInfo> courses = DataManager.getInstance().getCourses();
 //        CourseInfo course = DataManager.getInstance().getCourse(courseId);
+        CourseEventBroadcastHelper.sendBroadcast(this, courseId, "Editing note");
         populateNoteViews(courseId, noteTitle, noteText);
         saveOriginalNoteValues();
     }
