@@ -14,9 +14,6 @@ public class NoteUploaderJobService extends JobService {
     public static final String EXTRA_DATA_URI = "com.klid.android.notekeeper.extras.DATA_URI";
     private NoteUploader mNoteUploader;
 
-    public NoteUploaderJobService() {
-    }
-
     @Override
     public boolean onStartJob(JobParameters params) {
         AsyncTask<JobParameters, Void, Void> task =  new NoteUploaderAsync(this);

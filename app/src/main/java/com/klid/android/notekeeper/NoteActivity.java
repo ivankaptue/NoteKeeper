@@ -1,5 +1,7 @@
 package com.klid.android.notekeeper;
 
+import android.app.AlarmManager;
+import android.app.PendingIntent;
 import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.Intent;
@@ -8,6 +10,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.SystemClock;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -344,15 +347,39 @@ public class NoteActivity extends AppCompatActivity
             actionDeleteNote();
         } else if (id == R.id.action_set_reminder) {
             showReminderNotification();
+        } else if (id == R.id.action_cancel_reminder) {
+            cancelReminder();
         }
 
         return super.onOptionsItemSelected(item);
     }
 
+    private void cancelReminder() {
+        AlarmManager alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
+//        alarmManager.cancel();
+    }
+
     private void showReminderNotification() {
         String noteTitle = mTextNoteTitle.getText().toString();
         String noteText = mTextNoteText.getText().toString();
-        NoteReminderNotification.notify(this, noteTitle, noteText, mNoteId);
+
+        Intent intent = new Intent(this, NoteReminderReceiver.class);
+        intent.putExtra(NoteReminderReceiver.EXTRA_NOTE_TITLE, noteTitle);
+        intent.putExtra(NoteReminderReceiver.EXTRA_NOTE_TEXT, noteText);
+        intent.putExtra(NoteReminderReceiver.EXTRA_NOTE_ID, mNoteId);
+
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+        AlarmManager alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
+
+        long currentTimeInMilliseconds = SystemClock.elapsedRealtime();
+        long ONE_HOUR = 60 * 60 * 1000;
+        long TEN_SECONDS = 10 * 1000;
+        long alarmTime = currentTimeInMilliseconds + TEN_SECONDS;
+
+        alarmManager.set(AlarmManager.ELAPSED_REALTIME_WAKEUP, alarmTime, pendingIntent);
+//        alarmManager.setRepeating(AlarmManager.ELAPSED_REALTIME, alarmTime, TEN_SECONDS, pendingIntent);
+//        NoteReminderNotification.notify(this, noteTitle, noteText, mNoteId);
     }
 
     private void actionDeleteNote() {
