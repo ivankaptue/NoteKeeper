@@ -39,9 +39,11 @@ public class MainActivity extends AppCompatActivity
     implements NavigationView.OnNavigationItemSelectedListener,
     LoaderManager.LoaderCallbacks<Cursor> {
 
+    private static final String CURRENT_VIEW_ID = "CURRENT_VIEW_ID";
     public static final int LOADER_NOTES = 0;
     public static final int NOTE_UPLOADER_JOB_ID = 1;
     private final String TAG = getClass().getSimpleName();
+
 
     private NoteRecyclerAdapter mNoteRecyclerAdapter;
     private RecyclerView mRecyclerItems;
@@ -51,6 +53,7 @@ public class MainActivity extends AppCompatActivity
     private NoteKeeperOpenHelper mDBOpenHelper;
     private Loader<Cursor> mNoteLoader;
     private DrawerLayout mDrawer;
+    private int mCurrentViewId = -1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -80,6 +83,9 @@ public class MainActivity extends AppCompatActivity
         NavigationView navigationView = findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
 
+        if (savedInstanceState != null)
+            restoreInstanceState(savedInstanceState);
+
         initializeDisplayContent();
     }
 
@@ -108,6 +114,9 @@ public class MainActivity extends AppCompatActivity
 //        mAdapterNotes.notifyDataSetChanged();
 
         updateNavHeader();
+
+        if (mCurrentViewId != -1)
+            selectNavigationMenuItem(mCurrentViewId);
 //        openDrawer();
     }
 
@@ -163,7 +172,6 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void initializeDisplayContent() {
-        DataManager.loadFromDatabase(mDBOpenHelper);
 //        final ListView listNotes = findViewById(R.id.list_notes);
 //
 //        List<NoteInfo> notes = DataManager.getInstance().getNotes();
@@ -179,16 +187,22 @@ public class MainActivity extends AppCompatActivity
 //            startActivity(intent);
 //        });
 
+        DataManager.loadFromDatabase(mDBOpenHelper);
         mRecyclerItems = findViewById(R.id.list_items);
         mNotesLayoutManager = new LinearLayoutManager(this);
-        mCoursesLayoutManager = new GridLayoutManager(this, getResources().getInteger(R.integer.course_grid_span));
+        mCoursesLayoutManager = new GridLayoutManager(this,
+            getResources().getInteger(R.integer.course_grid_span));
 
         mNoteRecyclerAdapter = new NoteRecyclerAdapter(this, null);
 
         List<CourseInfo> courses = DataManager.getInstance().getCourses();
         mCourseRecyclerAdapter = new CourseRecyclerAdapter(this, courses);
 
-        displayNotes();
+        if (mCurrentViewId == R.id.nav_courses) {
+            displayCourses();
+        } else {
+            displayNotes();
+        }
     }
 
     private void displayNotes() {
@@ -199,9 +213,22 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void selectNavigationMenuItem(int itemId) {
+        Log.d(TAG, "selectNavigationMenuItem : " + itemId);
         NavigationView navigationView = findViewById(R.id.nav_view);
         Menu menu = navigationView.getMenu();
         menu.findItem(itemId).setChecked(true);
+        mCurrentViewId = itemId;
+    }
+
+    @Override
+    protected void onSaveInstanceState(@NonNull Bundle outState) {
+        outState.putInt(CURRENT_VIEW_ID, mCurrentViewId);
+        super.onSaveInstanceState(outState);
+    }
+
+    private void restoreInstanceState(Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
+        mCurrentViewId = savedInstanceState.getInt(CURRENT_VIEW_ID);
     }
 
     private void displayCourses() {
