@@ -1,12 +1,17 @@
 package com.klid.android.notekeeper;
 
+import android.Manifest;
 import android.app.AlarmManager;
 import android.app.PendingIntent;
 import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.net.ConnectivityManager;
+import android.net.Network;
+import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -20,6 +25,8 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.loader.app.LoaderManager;
 import androidx.loader.content.CursorLoader;
 import androidx.loader.content.Loader;
@@ -30,18 +37,20 @@ import com.klid.android.notekeeper.NoteKeeperProviderContract.Courses;
 import com.klid.android.notekeeper.NoteKeeperProviderContract.Notes;
 
 import java.lang.ref.WeakReference;
+import java.security.Permission;
 
 public class NoteActivity extends AppCompatActivity
     implements LoaderManager.LoaderCallbacks<Cursor> {
 
+    private final String TAG = getClass().getSimpleName();
     public static final int LOADER_NOTES = 0;
     public static final int LOADER_COURSES = 1;
-    private final String TAG = getClass().getSimpleName();
     public static final String NOTE_ID = "com.jwhh.jim.notekeeper.NOTE_ID";
     public static final String ORIGINAL_NOTE_COURSE_ID = "com.jwhh.jim.notekeeper.ORIGINAL_NOTE_COURSE_ID";
     public static final String ORIGINAL_NOTE_TITLE = "com.jwhh.jim.notekeeper.ORIGINAL_NOTE_TITLE";
     public static final String ORIGINAL_NOTE_TEXT = "com.jwhh.jim.notekeeper.ORIGINAL_NOTE_TEXT";
     public static final int ID_NOT_SET = -1;
+    private NoteInfo mNote = new NoteInfo(DataManager.getInstance().getCourses().get(0), "", "");
     //    private NoteInfo mNote = new NoteInfo(DataManager.getInstance().getCourses().get(0), "", "");
     private boolean mIsNewNote;
     private Spinner mSpinnerCourses;
@@ -65,6 +74,7 @@ public class NoteActivity extends AppCompatActivity
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        Log.d(TAG, "onCreate");
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_note);
         Toolbar toolbar = findViewById(R.id.toolbar);
@@ -82,6 +92,11 @@ public class NoteActivity extends AppCompatActivity
         LoaderManager.getInstance(this).initLoader(LOADER_COURSES, null, this);
 
         readDisplayStateValues();
+        if (savedInstanceState == null) {
+            saveOriginalNoteValues();
+        } else {
+            restoreOriginalNoteValues(savedInstanceState);
+        }
 
         mTextNoteTitle = findViewById(R.id.text_note_title);
         mTextNoteText = findViewById(R.id.text_note_text);
@@ -89,10 +104,41 @@ public class NoteActivity extends AppCompatActivity
         if (!mIsNewNote)
             LoaderManager.getInstance(this).initLoader(LOADER_NOTES, null, this);
 
-        if (savedInstanceState != null) {
-            restoreOriginalNoteValues(savedInstanceState);
+
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_NETWORK_STATE) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_NETWORK_STATE}, 0);
+        } else {
+            displayNetworkState();
         }
-        Log.d(TAG, "onCreate");
+    }
+
+    private void displayNetworkState() {
+        AsyncTask<Void, Void, Void> task = new AsyncTask<Void, Void, Void>() {
+            @Override
+            protected Void doInBackground(Void... voids) {
+                ConnectivityManager connectivityManager = (ConnectivityManager) getSystemService(CONNECTIVITY_SERVICE);
+                NetworkInfo networkInfo = connectivityManager.getActiveNetworkInfo();
+                Log.i(TAG, Boolean.toString(networkInfo != null && networkInfo.isConnected()));
+                return null;
+            }
+        };
+
+        task.execute();
+
+//        Log.i(TAG, Boolean.toString(connectivityManager.isDefaultNetworkActive()));
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        switch (requestCode) {
+            case 0:
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    displayNetworkState();
+                } else {
+                    Log.i(TAG, "Permission denied");
+                }
+                break;
+        }
     }
 
     @Override
@@ -146,19 +192,11 @@ public class NoteActivity extends AppCompatActivity
     }
 
     private void saveOriginalNoteValues() {
-        String courseId = mNoteCursor.getString(mCourseIdPos);
-        String noteTitle = mNoteCursor.getString(mNoteTitlePos);
-        String noteText = mNoteCursor.getString(mNoteTextPos);
-
-        mOriginalNoteCourseId = courseId;
-        mOriginalNoteTitle = noteTitle;
-        mOriginalNoteText = noteText;
-
-//        if (mIsNewNote)
-//            return;
-//        mOriginalNoteCourseId = mNote.getCourse().getCourseId();
-//        mOriginalNoteTitle = mNote.getTitle();
-//        mOriginalNoteText = mNote.getText();
+        if (mIsNewNote)
+            return;
+        mOriginalNoteCourseId = mNote.getCourse().getCourseId();
+        mOriginalNoteTitle = mNote.getTitle();
+        mOriginalNoteText = mNote.getText();
     }
 
     @Override
@@ -251,24 +289,21 @@ public class NoteActivity extends AppCompatActivity
     }
 
     private void displayNote() {
+//        List<CourseInfo> courses = DataManager.getInstance().getCourses();
+//        CourseInfo course = DataManager.getInstance().getCourse(courseId);
         String courseId = mNoteCursor.getString(mCourseIdPos);
         String noteTitle = mNoteCursor.getString(mNoteTitlePos);
         String noteText = mNoteCursor.getString(mNoteTextPos);
-//        List<CourseInfo> courses = DataManager.getInstance().getCourses();
-//        CourseInfo course = DataManager.getInstance().getCourse(courseId);
-        CourseEventBroadcastHelper.sendBroadcast(this, courseId, "Editing note");
-        populateNoteViews(courseId, noteTitle, noteText);
-        saveOriginalNoteValues();
-    }
 
-    private void populateNoteViews(String courseId, String noteTitle, String noteText) {
-        int courseIndex = getIndexOfCouseId(courseId);
+        int courseIndex = getIndexOfCourseId(courseId);
+
         mSpinnerCourses.setSelection(courseIndex);
         mTextNoteTitle.setText(noteTitle);
         mTextNoteText.setText(noteText);
+        CourseEventBroadcastHelper.sendBroadcast(this, courseId, "Editing note");
     }
 
-    private int getIndexOfCouseId(String courseId) {
+    private int getIndexOfCourseId(String courseId) {
         Cursor cursor = mAdapterCourses.getCursor();
         int courseRowIndex = 0;
         int courseIdPos = cursor.getColumnIndex(CourseInfoEntry.COLUMN_COURSE_ID);
@@ -374,11 +409,11 @@ public class NoteActivity extends AppCompatActivity
 
         long currentTimeInMilliseconds = SystemClock.elapsedRealtime();
         long ONE_HOUR = 60 * 60 * 1000;
-        long TEN_SECONDS = 10 * 1000;
-        long alarmTime = currentTimeInMilliseconds + TEN_SECONDS;
+        long SECONDS = 30 * 1000; // 30 seconds
+        long alarmTime = currentTimeInMilliseconds + SECONDS;
 
         alarmManager.set(AlarmManager.ELAPSED_REALTIME_WAKEUP, alarmTime, pendingIntent);
-//        alarmManager.setRepeating(AlarmManager.ELAPSED_REALTIME, alarmTime, TEN_SECONDS, pendingIntent);
+//        alarmManager.setRepeating(AlarmManager.ELAPSED_REALTIME, alarmTime, SECONDS, pendingIntent);
 //        NoteReminderNotification.notify(this, noteTitle, noteText, mNoteId);
     }
 
@@ -528,7 +563,8 @@ public class NoteActivity extends AppCompatActivity
         mCourseIdPos = mNoteCursor.getColumnIndex(NoteInfoEntry.COLUMN_COURSE_ID);
         mNoteTitlePos = mNoteCursor.getColumnIndex(NoteInfoEntry.COLUMN_NOTE_TITLE);
         mNoteTextPos = mNoteCursor.getColumnIndex(NoteInfoEntry.COLUMN_NOTE_TEXT);
-        mNoteCursor.moveToNext();
+        mNoteCursor.moveToFirst();
+
         mNotesQueryFinished = true;
         displayNoteWhenQueryFinished();
     }
