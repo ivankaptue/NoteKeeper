@@ -10,7 +10,6 @@ import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.ConnectivityManager;
-import android.net.Network;
 import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -37,7 +36,6 @@ import com.klid.android.notekeeper.NoteKeeperProviderContract.Courses;
 import com.klid.android.notekeeper.NoteKeeperProviderContract.Notes;
 
 import java.lang.ref.WeakReference;
-import java.security.Permission;
 
 public class NoteActivity extends AppCompatActivity
     implements LoaderManager.LoaderCallbacks<Cursor> {
@@ -71,6 +69,7 @@ public class NoteActivity extends AppCompatActivity
     private boolean mNotesQueryFinished;
     private Uri mNoteUri;
     private boolean mIsDeleting = false;
+    private ModuleStatusView mViewModuleStatus;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -104,12 +103,26 @@ public class NoteActivity extends AppCompatActivity
         if (!mIsNewNote)
             LoaderManager.getInstance(this).initLoader(LOADER_NOTES, null, this);
 
+        mViewModuleStatus = findViewById(R.id.module_status);
+        loadModuleStatusValues();
 
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_NETWORK_STATE) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_NETWORK_STATE}, 0);
         } else {
             displayNetworkState();
         }
+    }
+
+    private void loadModuleStatusValues() {
+        // in real life we'd lookup the selected course's statuses from the content provider
+        int totalNumberOfModules = 10;
+        int completedNumberOfModules = 7;
+        boolean[] moduleStatus = new boolean[totalNumberOfModules];
+        for (int i = 0; i < completedNumberOfModules; i++) {
+            moduleStatus[i] = true;
+        }
+
+        mViewModuleStatus.setModuleStatus(moduleStatus);
     }
 
     private void displayNetworkState() {

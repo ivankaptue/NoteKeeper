@@ -44,4 +44,11 @@
 			app:layout_constraintEnd_toEndOf="@+id/text_note_title"
 			app:layout_constraintStart_toStartOf="@+id/text_note_title" android:hint="@string/note_text_hint"
 	/>
+	<view android:layout_width="0dp" android:layout_height="wrap_content"
+		  class="com.klid.android.notekeeper.ModuleStatusView"
+		  id="@+id/view" android:layout_marginTop="8dp"
+		  app:layout_constraintTop_toBottomOf="@+id/progress_bar"
+		  app:layout_constraintStart_toStartOf="@+id/text_note_text"
+		  app:layout_constraintEnd_toEndOf="@+id/text_note_text" android:id="@+id/module_status" android:padding="5dp"
+		  app:outlineColor="@android:color/holo_green_dark" app:shape="circle" app:outlineWidth="5dp"/>
 </androidx.constraintlayout.widget.ConstraintLayout>
