@@ -30,6 +30,6 @@
 			android:layout_gravity="bottom|end"
 			android:layout_margin="@dimen/fab_margin"
 			style="@style/AddFab"
-	/>
+			android:contentDescription="@string/create_new_note"/>
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

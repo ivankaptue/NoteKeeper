@@ -21,7 +21,8 @@
 			android:layout_height="wrap_content"
 			android:id="@+id/spinner_courses" app:layout_constraintEnd_toEndOf="parent" android:layout_marginEnd="16dp"
 			app:layout_constraintStart_toStartOf="parent" android:layout_marginStart="16dp"
-			android:layout_marginTop="16dp" app:layout_constraintTop_toTopOf="parent"/>
+			android:layout_marginTop="16dp" app:layout_constraintTop_toTopOf="parent"
+			android:nextFocusRight="@id/text_note_title"/>
 	<EditText
 			android:layout_width="0dp"
 			android:layout_height="wrap_content"
@@ -32,7 +33,7 @@
 			android:layout_marginTop="8dp"
 			app:layout_constraintEnd_toEndOf="@+id/spinner_courses"
 			app:layout_constraintStart_toStartOf="@+id/spinner_courses" android:hint="@string/note_title_hint"
-			android:textColor="@android:color/black"/>
+			android:textColor="@android:color/black" android:nextFocusRight="@id/text_note_text"/>
 	<EditText
 			android:layout_width="0dp"
 			android:layout_height="wrap_content"

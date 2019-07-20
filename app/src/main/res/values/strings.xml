@@ -62,4 +62,5 @@
 	<string name="action_backup">Backup notes</string>
 	<string name="action_upload_notes">Upload notes</string>
 	<string name="action_cancel_reminder">Cancel reminder</string>
+	<string name="create_new_note">Create new note</string>
 </resources>
