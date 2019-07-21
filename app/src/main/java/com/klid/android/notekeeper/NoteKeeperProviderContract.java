@@ -22,6 +22,8 @@ public final class NoteKeeperProviderContract {
     protected interface NotesColumns {
         String COLUMN_NOTE_TITLE = "note_title";
         String COLUMN_NOTE_TEXT = "note_text";
+        String COLUMN_REMINDER_ENABLED = "reminder_enabled";
+        String COLUMN_REMINDER_DATE = "reminder_date";
     }
 
     public static final class Courses implements BaseColumns, CoursesColumns, CoursesIdColumns {

@@ -76,4 +76,8 @@
 
 	<string name="action_share">Share</string>
 	<string name="action_reply">Reply</string>
+	<string name="note_reminder_enabled">Reminder</string>
+	<string name="note_reminder_date">Note reminder date</string>
+	<string name="note_reminder_time">Note reminder time</string>
+	<string name="today">Today</string>
 </resources>

@@ -52,20 +52,8 @@
 				android:theme="@style/AppTheme.NoActionBar">
 			<intent-filter>
 				<action android:name="android.intent.action.MAIN"/>
-
 				<category android:name="android.intent.category.LAUNCHER"/>
-
 				<action android:name="android.intent.action.VIEW"/>
-
-				<!--
-                <category android:name="android.intent.category.DEFAULT"/>
-				<category android:name="android.intent.category.BROWSABLE"/>
-
-				&lt;!&ndash; Accepts URIs that begin with "http://www.example.com” &ndash;&gt;
-				<data
-						android:host="www.example.com"
-						android:scheme="http"/>
-                -->
 			</intent-filter>
 		</activity>
 		<activity

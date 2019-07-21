@@ -3,6 +3,8 @@ package com.klid.android.notekeeper;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import java.time.LocalDateTime;
+
 /**
  * Created by Jim.
  */
@@ -12,6 +14,8 @@ public final class NoteInfo implements Parcelable, Cloneable {
     private String mTitle;
     private String mText;
     private int mId;
+    private boolean reminderEnabled;
+    private LocalDateTime reminderDate;
 
     public NoteInfo(CourseInfo course, String title, String text) {
         mCourse = course;
@@ -62,6 +66,22 @@ public final class NoteInfo implements Parcelable, Cloneable {
 
     public void setId(int id) {
         mId = id;
+    }
+
+    public boolean isReminderEnabled() {
+        return reminderEnabled;
+    }
+
+    public void setReminderEnabled(boolean reminderEnabled) {
+        this.reminderEnabled = reminderEnabled;
+    }
+
+    public LocalDateTime getReminderDate() {
+        return reminderDate;
+    }
+
+    public void setReminderDate(LocalDateTime reminderDate) {
+        this.reminderDate = reminderDate;
     }
 
     private String getCompareKey() {

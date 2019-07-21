@@ -34,6 +34,12 @@ public final class NoteKeeperDatabaseContract {
         public static final String COLUMN_NOTE_TITLE = "note_title";
         public static final String COLUMN_NOTE_TEXT = "note_text";
         public static final String COLUMN_COURSE_ID = "course_id";
+        public static final String COLUMN_REMINDER_ENABLED = "reminder_enabled";
+        public static final String COLUMN_REMINDER_DATE = "reminder_date";
+
+        // REMINDER COLUMNS
+        public static final String ADD_COLUMN_REMINDER_STATE = "ALTER TABLE " + TABLE_NAME + " ADD COLUMN " + COLUMN_REMINDER_ENABLED + " BOOLEAN;";
+        public static final String ADD_COLUMN_REMINDER_DATE = "ALTER TABLE " + TABLE_NAME + " ADD COLUMN " + COLUMN_REMINDER_DATE + " INTEGER;";
 
         // CREATE INDEX note_info_index1 ON note_info(note_title);
         public static final String INDEX1 = TABLE_NAME + "_index1";

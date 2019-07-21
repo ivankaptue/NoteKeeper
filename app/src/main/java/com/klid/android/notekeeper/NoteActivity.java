@@ -1,8 +1,7 @@
 package com.klid.android.notekeeper;
 
 import android.Manifest;
-import android.app.AlarmManager;
-import android.app.PendingIntent;
+import android.app.*;
 import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.Intent;
@@ -15,6 +14,8 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.SystemClock;
+import android.text.InputType;
+import android.text.format.DateFormat;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -26,6 +27,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.fragment.app.DialogFragment;
 import androidx.loader.app.LoaderManager;
 import androidx.loader.content.CursorLoader;
 import androidx.loader.content.Loader;
@@ -34,8 +36,11 @@ import com.klid.android.notekeeper.NoteKeeperDatabaseContract.CourseInfoEntry;
 import com.klid.android.notekeeper.NoteKeeperDatabaseContract.NoteInfoEntry;
 import com.klid.android.notekeeper.NoteKeeperProviderContract.Courses;
 import com.klid.android.notekeeper.NoteKeeperProviderContract.Notes;
+import com.klid.android.notekeeper.utils.NoteDateUtils;
+import com.klid.android.notekeeper.utils.SoftInputUtils;
 
 import java.lang.ref.WeakReference;
+import java.util.Calendar;
 
 public class NoteActivity extends AppCompatActivity
     implements LoaderManager.LoaderCallbacks<Cursor> {
@@ -47,8 +52,8 @@ public class NoteActivity extends AppCompatActivity
     public static final String ORIGINAL_NOTE_COURSE_ID = "com.jwhh.jim.notekeeper.ORIGINAL_NOTE_COURSE_ID";
     public static final String ORIGINAL_NOTE_TITLE = "com.jwhh.jim.notekeeper.ORIGINAL_NOTE_TITLE";
     public static final String ORIGINAL_NOTE_TEXT = "com.jwhh.jim.notekeeper.ORIGINAL_NOTE_TEXT";
+    public static final String ORIGINAL_NOTE_REMINDER_DATE = "com.jwhh.jim.notekeeper.ORIGINAL_NOTE_REMINDER_DATE";
     public static final int ID_NOT_SET = -1;
-    private NoteInfo mNote = new NoteInfo(DataManager.getInstance().getCourses().get(0), "", "");
     //    private NoteInfo mNote = new NoteInfo(DataManager.getInstance().getCourses().get(0), "", "");
     private boolean mIsNewNote;
     private Spinner mSpinnerCourses;
@@ -70,6 +75,17 @@ public class NoteActivity extends AppCompatActivity
     private Uri mNoteUri;
     private boolean mIsDeleting = false;
     private ModuleStatusView mViewModuleStatus;
+    private EditText mNoteReminderDate;
+    private EditText mNoteReminderTime;
+    private TimePickerFragment mTimePickerFragment;
+    private DatePickerFragment mDatePickerFragment;
+    private ImageButton mNoteReminderCancelButton;
+    private int mNoteReminderDatePos;
+    private long mOriginalNoteReminderDate;
+    private CheckBox mNoteReminderCheckbox;
+    private int mOriginalNoteReminderEnabled;
+    private int mNoteReminderEnabledPos;
+    private LinearLayout mNoteReminderTimeContainer;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -91,9 +107,7 @@ public class NoteActivity extends AppCompatActivity
         LoaderManager.getInstance(this).initLoader(LOADER_COURSES, null, this);
 
         readDisplayStateValues();
-        if (savedInstanceState == null) {
-            saveOriginalNoteValues();
-        } else {
+        if (savedInstanceState != null) {
             restoreOriginalNoteValues(savedInstanceState);
         }
 
@@ -106,11 +120,71 @@ public class NoteActivity extends AppCompatActivity
         mViewModuleStatus = findViewById(R.id.module_status);
         loadModuleStatusValues();
 
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_NETWORK_STATE) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_NETWORK_STATE}, 0);
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_NETWORK_STATE) !=
+            PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this,
+                new String[]{Manifest.permission.ACCESS_NETWORK_STATE}, 0);
         } else {
             displayNetworkState();
         }
+
+        mNoteReminderTimeContainer = findViewById(R.id.note_reminder_time_container);
+        ImageButton noteDatePickerButton = findViewById(R.id.note_date_picker);
+        ImageButton noteTimePickerButton = findViewById(R.id.note_time_picker);
+
+        mNoteReminderDate = findViewById(R.id.note_reminder_date);
+        mNoteReminderDate.setOnClickListener(this::showDatePickerDialog);
+        mNoteReminderDate.setOnFocusChangeListener((v, hasFocus) -> {
+            if (hasFocus) showDatePickerDialog(v);
+        });
+        noteDatePickerButton.setOnClickListener(view -> onDatePickerButtonClicked());
+        mDatePickerFragment = new DatePickerFragment(this, mNoteReminderDate);
+
+        mNoteReminderCancelButton = findViewById(R.id.note_cancel_reminder_date);
+        mNoteReminderCancelButton.setOnClickListener(v -> handleCancelReminderDate());
+
+        mNoteReminderTime = findViewById(R.id.note_reminder_time);
+        mNoteReminderTime.setOnClickListener(this::showTimePickerDialog);
+        mNoteReminderTime.setOnFocusChangeListener((v, hasFocus) -> {
+            if (hasFocus) showTimePickerDialog(v);
+        });
+        noteTimePickerButton.setOnClickListener(v -> onTimePickerButtonClicked());
+        mTimePickerFragment = new TimePickerFragment(this, mNoteReminderTime);
+
+        mNoteReminderCheckbox = findViewById(R.id.note_reminder_checkbox);
+    }
+
+    private void onDatePickerButtonClicked() {
+        mNoteReminderDate.clearFocus();
+        mNoteReminderDate.requestFocus();
+    }
+
+    private void onTimePickerButtonClicked() {
+        mNoteReminderTime.clearFocus();
+        mNoteReminderTime.requestFocus();
+    }
+
+    private void handleCancelReminderDate() {
+        mNoteReminderDate.setText("");
+        mNoteReminderTime.setText("");
+
+        if (mDatePickerFragment != null) {
+            mDatePickerFragment.setCalendar(null);
+        }
+        if (mTimePickerFragment != null) {
+            mTimePickerFragment.setCalendar(null);
+        }
+
+        mNoteReminderTimeContainer.setVisibility(View.GONE);
+        mNoteReminderCancelButton.setVisibility(View.GONE);
+    }
+
+    private void showTimePickerDialog(View v) {
+        mTimePickerFragment.show(getSupportFragmentManager(), "timePicker");
+    }
+
+    public void showDatePickerDialog(View v) {
+        mDatePickerFragment.show(getSupportFragmentManager(), "datePicker");
     }
 
     private void loadModuleStatusValues() {
@@ -152,6 +226,12 @@ public class NoteActivity extends AppCompatActivity
                 }
                 break;
         }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        SoftInputUtils.hideSoftKeyboard(this);
     }
 
     @Override
@@ -202,14 +282,15 @@ public class NoteActivity extends AppCompatActivity
         mOriginalNoteCourseId = savedInstanceState.getString(ORIGINAL_NOTE_COURSE_ID);
         mOriginalNoteTitle = savedInstanceState.getString(ORIGINAL_NOTE_TITLE);
         mOriginalNoteText = savedInstanceState.getString(ORIGINAL_NOTE_TEXT);
+        mOriginalNoteReminderDate = savedInstanceState.getLong(ORIGINAL_NOTE_REMINDER_DATE);
     }
 
-    private void saveOriginalNoteValues() {
-        if (mIsNewNote)
-            return;
-        mOriginalNoteCourseId = mNote.getCourse().getCourseId();
-        mOriginalNoteTitle = mNote.getTitle();
-        mOriginalNoteText = mNote.getText();
+    private void saveOriginalNoteValues(String courseId, String noteTitle, String noteText, long reminderDate, int reminderDateEnabled) {
+        mOriginalNoteCourseId = courseId;
+        mOriginalNoteTitle = noteTitle;
+        mOriginalNoteText = noteText;
+        mOriginalNoteReminderDate = reminderDate;
+        mOriginalNoteReminderEnabled = reminderDateEnabled;
     }
 
     @Override
@@ -253,7 +334,7 @@ public class NoteActivity extends AppCompatActivity
 //        mNote.setCourse(course);
 //        mNote.setTitle(mOriginalNoteTitle);
 //        mNote.setText(mOriginalNoteText);
-        saveNoteToDatabase(mOriginalNoteCourseId, mOriginalNoteTitle, mOriginalNoteText);
+        saveNoteToDatabase(mOriginalNoteCourseId, mOriginalNoteTitle, mOriginalNoteText, mOriginalNoteReminderDate, mOriginalNoteReminderEnabled);
     }
 
     @Override
@@ -262,13 +343,24 @@ public class NoteActivity extends AppCompatActivity
         outState.putString(ORIGINAL_NOTE_COURSE_ID, mOriginalNoteCourseId);
         outState.putString(ORIGINAL_NOTE_TITLE, mOriginalNoteTitle);
         outState.putString(ORIGINAL_NOTE_TEXT, mOriginalNoteText);
+        outState.putLong(ORIGINAL_NOTE_REMINDER_DATE, mOriginalNoteReminderDate);
     }
 
     private void saveNote() {
         String courseId = selectedCourseId();
         String noteTitle = mTextNoteTitle.getText().toString();
         String noteText = mTextNoteText.getText().toString();
-        saveNoteToDatabase(courseId, noteTitle, noteText);
+        boolean reminderEnabled = mNoteReminderCheckbox.isChecked();
+        Calendar calendar = null;
+        if (mDatePickerFragment.getCalendar() != null) {
+            calendar = mDatePickerFragment.getCalendar();
+            Calendar timePickerCalendar = mTimePickerFragment.getCalendar();
+            if (timePickerCalendar != null) {
+                calendar.set(Calendar.HOUR_OF_DAY, timePickerCalendar.get(Calendar.HOUR_OF_DAY));
+                calendar.set(Calendar.MINUTE, timePickerCalendar.get(Calendar.MINUTE));
+            }
+        }
+        saveNoteToDatabase(courseId, noteTitle, noteText, calendar == null ? 0 : calendar.getTimeInMillis(), reminderEnabled ? 1 : 0);
     }
 
     private String selectedCourseId() {
@@ -279,7 +371,7 @@ public class NoteActivity extends AppCompatActivity
         return cursor.getString(courseIdPos);
     }
 
-    private void saveNoteToDatabase(String courseId, String noteTitle, String noteText) {
+    private void saveNoteToDatabase(String courseId, String noteTitle, String noteText, long reminderDate, int reminderEnabled) {
         final String selection = NoteInfoEntry._ID + " = ?";
         final String[] selectionArgs = {Integer.toString(mNoteId)};
 
@@ -287,6 +379,8 @@ public class NoteActivity extends AppCompatActivity
         values.put(Notes.COLUMN_COURSE_ID, courseId);
         values.put(Notes.COLUMN_NOTE_TITLE, noteTitle);
         values.put(Notes.COLUMN_NOTE_TEXT, noteText);
+        values.put(Notes.COLUMN_REMINDER_DATE, reminderDate);
+        values.put(Notes.COLUMN_REMINDER_ENABLED, reminderEnabled);
 
         AsyncTask task = new AsyncTask() {
             @Override
@@ -307,13 +401,39 @@ public class NoteActivity extends AppCompatActivity
         String courseId = mNoteCursor.getString(mCourseIdPos);
         String noteTitle = mNoteCursor.getString(mNoteTitlePos);
         String noteText = mNoteCursor.getString(mNoteTextPos);
+        long reminderDate = mNoteCursor.getLong(mNoteReminderDatePos);
+        int reminderDateEnabled = mNoteCursor.getInt(mNoteReminderEnabledPos);
+
+        Log.i(TAG, "note reminder date " + reminderDate);
 
         int courseIndex = getIndexOfCourseId(courseId);
 
         mSpinnerCourses.setSelection(courseIndex);
         mTextNoteTitle.setText(noteTitle);
         mTextNoteText.setText(noteText);
+        mNoteReminderCheckbox.setChecked(reminderDateEnabled == 1);
+        displayNoteReminderDate(reminderDate);
         CourseEventBroadcastHelper.sendBroadcast(this, courseId, "Editing note");
+    }
+
+    private void displayNoteReminderDate(long reminderDate) {
+        if (reminderDate == 0) return;
+
+        mNoteReminderTimeContainer.setVisibility(View.VISIBLE);
+        mNoteReminderCancelButton.setVisibility(View.VISIBLE);
+
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTimeInMillis(reminderDate);
+        int day = calendar.get(Calendar.DAY_OF_MONTH);
+        int month = calendar.get(Calendar.MONTH);
+        int year = calendar.get(Calendar.YEAR);
+        int hour = calendar.get(Calendar.HOUR_OF_DAY);
+        int minute = calendar.get(Calendar.MINUTE);
+
+        mNoteReminderDate.setText(NoteDateUtils.formatCalendarLocale(this, day, month, year));
+        mNoteReminderTime.setText(NoteDateUtils.formatTimeLocale(this, hour, minute));
+        mDatePickerFragment.setCalendar(calendar);
+        mTimePickerFragment.setCalendar(calendar);
     }
 
     private int getIndexOfCourseId(String courseId) {
@@ -531,7 +651,9 @@ public class NoteActivity extends AppCompatActivity
         String[] noteColumns = {
             Notes.COLUMN_COURSE_ID,
             Notes.COLUMN_NOTE_TITLE,
-            Notes.COLUMN_NOTE_TEXT
+            Notes.COLUMN_NOTE_TEXT,
+            Notes.COLUMN_REMINDER_DATE,
+            Notes.COLUMN_REMINDER_ENABLED,
         };
 
         mNoteUri = ContentUris.withAppendedId(Notes.CONTENT_URI, mNoteId);
@@ -576,7 +698,16 @@ public class NoteActivity extends AppCompatActivity
         mCourseIdPos = mNoteCursor.getColumnIndex(NoteInfoEntry.COLUMN_COURSE_ID);
         mNoteTitlePos = mNoteCursor.getColumnIndex(NoteInfoEntry.COLUMN_NOTE_TITLE);
         mNoteTextPos = mNoteCursor.getColumnIndex(NoteInfoEntry.COLUMN_NOTE_TEXT);
+        mNoteReminderDatePos = mNoteCursor.getColumnIndex(NoteInfoEntry.COLUMN_REMINDER_DATE);
+        mNoteReminderEnabledPos = mNoteCursor.getColumnIndex(NoteInfoEntry.COLUMN_REMINDER_ENABLED);
         mNoteCursor.moveToFirst();
+
+        String courseId = mNoteCursor.getString(mCourseIdPos);
+        String noteTitle = mNoteCursor.getString(mNoteTitlePos);
+        String noteText = mNoteCursor.getString(mNoteTextPos);
+        long reminderDate = mNoteCursor.getLong(mNoteReminderDatePos);
+        int reminderDateEnabled = mNoteCursor.getInt(mNoteReminderEnabledPos);
+        saveOriginalNoteValues(courseId, noteTitle, noteText, reminderDate, reminderDateEnabled);
 
         mNotesQueryFinished = true;
         displayNoteWhenQueryFinished();
@@ -621,7 +752,7 @@ public class NoteActivity extends AppCompatActivity
             Uri uri = activity.getContentResolver().insert(Notes.CONTENT_URI, insertValues);
 
             for (int i = 1; i <= 100; i++) {
-                simulateLongRunningWork();
+                // simulateLongRunningWork();
                 publishProgress(i);
             }
 
@@ -656,6 +787,110 @@ public class NoteActivity extends AppCompatActivity
         private ProgressBar getProgressBar() {
             NoteActivity activity = mActivityReference.get();
             return activity.findViewById(R.id.progress_bar);
+        }
+    }
+
+    public static class DatePickerFragment extends DialogFragment
+        implements DatePickerDialog.OnDateSetListener {
+
+        private final NoteActivity mContext;
+        private Calendar mCalendar;
+
+        public DatePickerFragment(NoteActivity context, EditText editText) {
+            mContext = context;
+            configureEditText(editText);
+            Log.i("NoteActivity", "configure edittext");
+        }
+
+        private void configureEditText(EditText editText) {
+            editText.setInputType(InputType.TYPE_NULL);
+            editText.setShowSoftInputOnFocus(false);
+            SoftInputUtils.hideSoftKeyboard(mContext);
+        }
+
+        @NonNull
+        @Override
+        public Dialog onCreateDialog(Bundle savedInstanceState) {
+            // Use the current date as the default date in the picker
+            final Calendar c = getCalendar() != null ? getCalendar() : Calendar.getInstance();
+            int year = c.get(Calendar.YEAR);
+            int month = c.get(Calendar.MONTH);
+            int day = c.get(Calendar.DAY_OF_MONTH);
+
+            // Create a new instance of DatePickerDialog and return it
+            return new DatePickerDialog(mContext, this, year, month, day);
+        }
+
+        @Override
+        public void onDateSet(DatePicker view, int year, int month, int day) {
+            Calendar calendar = Calendar.getInstance();
+            mContext.mNoteReminderTimeContainer.setVisibility(View.VISIBLE);
+            mContext.mNoteReminderCancelButton.setVisibility(View.VISIBLE);
+            if (year == calendar.get(Calendar.YEAR) &&
+                month == calendar.get(Calendar.MONTH) &&
+                day == calendar.get(Calendar.DAY_OF_MONTH)) {
+                setCalendar(calendar);
+                mContext.mNoteReminderDate.setText(getString(R.string.today));
+            } else {
+                calendar.set(Calendar.YEAR, year);
+                calendar.set(Calendar.MONTH, month);
+                calendar.set(Calendar.DAY_OF_MONTH, day);
+                setCalendar(calendar);
+                mContext.mNoteReminderDate.setText(NoteDateUtils.formatCalendarLocale(mContext, day, month, year));
+            }
+        }
+
+        public Calendar getCalendar() {
+            return mCalendar;
+        }
+
+        public void setCalendar(Calendar calendar) {
+            mCalendar = calendar;
+        }
+    }
+
+    public static class TimePickerFragment extends DialogFragment
+        implements TimePickerDialog.OnTimeSetListener {
+
+        private final NoteActivity mContext;
+        private Calendar mCalendar;
+
+        public TimePickerFragment(NoteActivity context, EditText editText) {
+            mContext = context;
+            configureEditText(editText);
+            Log.i("NoteActivity", "configure edittext");
+        }
+
+        private void configureEditText(EditText editText) {
+            editText.setInputType(InputType.TYPE_NULL);
+            editText.setShowSoftInputOnFocus(false);
+            SoftInputUtils.hideSoftKeyboard(mContext);
+        }
+
+        @NonNull
+        @Override
+        public Dialog onCreateDialog(Bundle savedInstanceState) {
+            final Calendar c = getCalendar() != null ? getCalendar() : Calendar.getInstance();
+            int hour = c.get(Calendar.HOUR_OF_DAY);
+            int minute = c.get(Calendar.MINUTE);
+            return new TimePickerDialog(mContext, this, hour, minute, DateFormat.is24HourFormat(mContext));
+        }
+
+        @Override
+        public void onTimeSet(TimePicker view, int hourOfDay, int minute) {
+            Calendar calendar = Calendar.getInstance();
+            calendar.set(Calendar.HOUR_OF_DAY, hourOfDay);
+            calendar.set(Calendar.MINUTE, minute);
+            setCalendar(calendar);
+            mContext.mNoteReminderTime.setText(NoteDateUtils.formatTimeLocale(mContext, hourOfDay, minute));
+        }
+
+        public Calendar getCalendar() {
+            return mCalendar;
+        }
+
+        public void setCalendar(Calendar calendar) {
+            mCalendar = calendar;
         }
     }
 }
