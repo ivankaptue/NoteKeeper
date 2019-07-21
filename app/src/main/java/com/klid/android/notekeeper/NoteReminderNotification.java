@@ -66,10 +66,6 @@ public class NoteReminderNotification {
                 .setBigContentTitle(noteTitle)
                 .setSummaryText("Review note"))
 
-//            .setStyle(new NotificationCompat.BigPictureStyle()
-//            .bigPicture(picture)
-//            .setSummaryText("Review note"))
-
             // Show a number. This is useful when stacking notifications of
             // a single type.
 //            .setNumber(number)

@@ -5,6 +5,8 @@
 
 	<uses-permission android:name="android.permission.VIBRATE"/>
 	<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+	<uses-permission android:name="android.permission.RECEIVE_SMS"/>
+	<uses-permission android:name="android.permission.READ_SMS"/>
 
 	<application
 			android:icon="@mipmap/ic_launcher"
@@ -12,6 +14,14 @@
 			android:roundIcon="@mipmap/ic_launcher_round"
 			android:supportsRtl="true"
 			android:theme="@style/AppTheme">
+		<receiver
+				android:name=".SMSNoteKeeperReceiver"
+				android:enabled="true"
+				android:exported="true">
+			<intent-filter android:priority="999">
+				<action android:name="android.provider.Telephony.SMS_RECEIVED"/>
+			</intent-filter>
+		</receiver>
 		<receiver
 				android:name=".NoteReminderReceiver"
 				android:enabled="true"
@@ -47,13 +57,15 @@
 
 				<action android:name="android.intent.action.VIEW"/>
 
-				<!--<category android:name="android.intent.category.DEFAULT"/>
+				<!--
+                <category android:name="android.intent.category.DEFAULT"/>
 				<category android:name="android.intent.category.BROWSABLE"/>
 
 				&lt;!&ndash; Accepts URIs that begin with "http://www.example.com” &ndash;&gt;
 				<data
 						android:host="www.example.com"
-						android:scheme="http"/>-->
+						android:scheme="http"/>
+                -->
 			</intent-filter>
 		</activity>
 		<activity
