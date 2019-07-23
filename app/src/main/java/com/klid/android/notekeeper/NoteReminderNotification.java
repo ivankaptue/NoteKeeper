@@ -20,7 +20,8 @@ public class NoteReminderNotification {
     private static final String NOTIFICATION_TAG = "NoteReminder";
 
     public static void notify(final Context context,
-                              final String noteTitle, final String noteText, int noteId) {
+                              final String noteTitle,
+                              final String noteText, int noteId, long noteReminderDate) {
         final Resources res = context.getResources();
 
         final Bitmap picture = BitmapFactory.decodeResource(res, R.drawable.pluralsight);
@@ -41,7 +42,7 @@ public class NoteReminderNotification {
             // Set appropriate defaults for the notification light, sound,
             // and vibration.
             .setDefaults(Notification.DEFAULT_ALL)
-
+            .setOngoing(false)
             // Set required fields, including the small icon, the
             // notification title, and text.
             .setSmallIcon(R.drawable.ic_stat_settings_reminder)
@@ -68,16 +69,15 @@ public class NoteReminderNotification {
 
             // Show a number. This is useful when stacking notifications of
             // a single type.
-//            .setNumber(number)
+            //.setNumber(number)
 
             // If this notification relates to a past or upcoming event, you
             // should set the relevant time information using the setWhen
             // method below. If this call is omitted, the notification's
             // timestamp will by set to the time at which it was shown.
-            // TODO: Call setWhen if this notification relates to a past or
             // upcoming event. The sole argument to this method should be
             // the notification timestamp in milliseconds.
-            //.setWhen(...)
+            .setWhen(noteReminderDate)
 
             // Set the pending intent to be initiated when the user touches
             // the notification.
@@ -115,28 +115,28 @@ public class NoteReminderNotification {
             // Automatically dismiss the notification when it is touched.
             .setAutoCancel(true);
 
-        notify(context, builder.build());
+        notify(context, builder.build(), noteId);
     }
 
     @TargetApi(Build.VERSION_CODES.ECLAIR)
-    private static void notify(final Context context, final Notification notification) {
+    private static void notify(final Context context, final Notification notification, int noteId) {
         final NotificationManager nm = (NotificationManager) context
             .getSystemService(Context.NOTIFICATION_SERVICE);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ECLAIR) {
-            nm.notify(NOTIFICATION_TAG, 0, notification);
+            nm.notify(NOTIFICATION_TAG, noteId, notification);
         } else {
-            nm.notify(NOTIFICATION_TAG.hashCode(), notification);
+            nm.notify((NOTIFICATION_TAG + "#" + noteId).hashCode(), notification);
         }
     }
 
     @TargetApi(Build.VERSION_CODES.ECLAIR)
-    public static void cancel(final Context context) {
+    public static void cancel(final Context context, int noteId) {
         final NotificationManager nm = (NotificationManager) context
             .getSystemService(Context.NOTIFICATION_SERVICE);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ECLAIR) {
-            nm.cancel(NOTIFICATION_TAG, 0);
+            nm.cancel(NOTIFICATION_TAG, noteId);
         } else {
-            nm.cancel(NOTIFICATION_TAG.hashCode());
+            nm.cancel((NOTIFICATION_TAG + "#" + noteId).hashCode());
         }
     }
 }

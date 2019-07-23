@@ -7,6 +7,8 @@
 	<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
 	<uses-permission android:name="android.permission.RECEIVE_SMS"/>
 	<uses-permission android:name="android.permission.READ_SMS"/>
+	<uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
+	<uses-permission android:name="android.permission.VIBRATE" />
 
 	<application
 			android:icon="@mipmap/ic_launcher"
@@ -15,9 +17,19 @@
 			android:supportsRtl="true"
 			android:theme="@style/AppTheme">
 		<receiver
-				android:name=".SMSNoteKeeperReceiver"
+				android:name=".RestoreOnBootReceiver"
 				android:enabled="true"
 				android:exported="true">
+			<intent-filter>
+				<action android:name="android.intent.action.BOOT_COMPLETED"/>
+				<!--<action android:name="android.intent.action.QUICKBOOT_POWERON"/>-->
+				<category android:name="android.intent.category.DEFAULT"/>
+			</intent-filter>
+		</receiver>
+		<receiver
+				android:name=".SMSNoteKeeperReceiver"
+				android:enabled="true"
+				android:exported="true" android:permission="android.permission.BROADCAST_SMS">
 			<intent-filter android:priority="999">
 				<action android:name="android.provider.Telephony.SMS_RECEIVED"/>
 			</intent-filter>
@@ -52,7 +64,9 @@
 				android:theme="@style/AppTheme.NoActionBar">
 			<intent-filter>
 				<action android:name="android.intent.action.MAIN"/>
+
 				<category android:name="android.intent.category.LAUNCHER"/>
+
 				<action android:name="android.intent.action.VIEW"/>
 			</intent-filter>
 		</activity>

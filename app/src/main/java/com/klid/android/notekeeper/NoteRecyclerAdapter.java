@@ -84,12 +84,11 @@ public class NoteRecyclerAdapter extends RecyclerView.Adapter<NoteRecyclerAdapte
         public ViewHolder(View itemView) {
             super(itemView);
 
-            String username = mPrefs.getString("user_display_name", "");
-
             mTextCourse = itemView.findViewById(R.id.text_course);
             mTextTitle = itemView.findViewById(R.id.text_title);
 
             itemView.setOnClickListener(view -> {
+                String username = mPrefs.getString("user_display_name", "");
                 if (username != null && username.equals(mContext.getResources().getString(R.string.pref_default_display_name))) {
                     SettingsReminderNotification.notify(mContext);
                 }

@@ -1,7 +1,9 @@
 package com.klid.android.notekeeper;
 
 import android.Manifest;
-import android.app.*;
+import android.app.DatePickerDialog;
+import android.app.Dialog;
+import android.app.TimePickerDialog;
 import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.Intent;
@@ -13,7 +15,6 @@ import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.SystemClock;
 import android.text.InputType;
 import android.text.format.DateFormat;
 import android.util.Log;
@@ -48,11 +49,11 @@ public class NoteActivity extends AppCompatActivity
     private final String TAG = getClass().getSimpleName();
     public static final int LOADER_NOTES = 0;
     public static final int LOADER_COURSES = 1;
-    public static final String NOTE_ID = "com.jwhh.jim.notekeeper.NOTE_ID";
-    public static final String ORIGINAL_NOTE_COURSE_ID = "com.jwhh.jim.notekeeper.ORIGINAL_NOTE_COURSE_ID";
-    public static final String ORIGINAL_NOTE_TITLE = "com.jwhh.jim.notekeeper.ORIGINAL_NOTE_TITLE";
-    public static final String ORIGINAL_NOTE_TEXT = "com.jwhh.jim.notekeeper.ORIGINAL_NOTE_TEXT";
-    public static final String ORIGINAL_NOTE_REMINDER_DATE = "com.jwhh.jim.notekeeper.ORIGINAL_NOTE_REMINDER_DATE";
+    public static final String NOTE_ID = "com.klid.android.notekeeper.NOTE_ID";
+    public static final String ORIGINAL_NOTE_COURSE_ID = "com.klid.android.notekeeper.ORIGINAL_NOTE_COURSE_ID";
+    public static final String ORIGINAL_NOTE_TITLE = "com.klid.android.notekeeper.ORIGINAL_NOTE_TITLE";
+    public static final String ORIGINAL_NOTE_TEXT = "com.klid.android.notekeeper.ORIGINAL_NOTE_TEXT";
+    public static final String ORIGINAL_NOTE_REMINDER_DATE = "com.klid.android.notekeeper.ORIGINAL_NOTE_REMINDER_DATE";
     public static final int ID_NOT_SET = -1;
     //    private NoteInfo mNote = new NoteInfo(DataManager.getInstance().getCourses().get(0), "", "");
     private boolean mIsNewNote;
@@ -390,9 +391,28 @@ public class NoteActivity extends AppCompatActivity
                 db.update(NoteInfoEntry.TABLE_NAME, values, selection, selectionArgs);*/
                 return null;
             }
+
+            @Override
+            protected void onPostExecute(Object o) {
+                CourseInfo courseInfo = new CourseInfo(courseId, "", null);
+                Calendar calendar = Calendar.getInstance();
+                calendar.setTimeInMillis(reminderDate);
+                NoteInfo note = new NoteInfo(mNoteId, courseInfo, noteTitle, noteText);
+                note.setReminderEnabled(reminderEnabled == 1);
+                note.setReminderDate(calendar);
+                setNoteReminder(note);
+            }
         };
 
         task.execute();
+    }
+
+    private void setNoteReminder(NoteInfo note) {
+        Calendar calendar = note.getReminderDate();
+        Log.i(TAG, "note date reminder " + calendar.getTime().toString());
+        AlarmData alarmData = new AlarmData(this);
+        alarmData.cancelReminder(note.getId());
+        alarmData.setAlarm(note);
     }
 
     private void displayNote() {
@@ -523,20 +543,12 @@ public class NoteActivity extends AppCompatActivity
     }
 
     private void cancelReminder() {
-        AlarmManager alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
-//        alarmManager.cancel();
+        AlarmData alarmData = new AlarmData(this);
+        alarmData.cancelReminder(mNoteId);
     }
 
     private void showReminderNotification() {
-        String noteTitle = mTextNoteTitle.getText().toString();
-        String noteText = mTextNoteText.getText().toString();
-
-        Intent intent = new Intent(this, NoteReminderReceiver.class);
-        intent.putExtra(NoteReminderReceiver.EXTRA_NOTE_TITLE, noteTitle);
-        intent.putExtra(NoteReminderReceiver.EXTRA_NOTE_TEXT, noteText);
-        intent.putExtra(NoteReminderReceiver.EXTRA_NOTE_ID, mNoteId);
-
-        PendingIntent pendingIntent = PendingIntent.getBroadcast(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+        /*PendingIntent pendingIntent = getAlarmIntent();
 
         AlarmManager alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
 
@@ -545,7 +557,10 @@ public class NoteActivity extends AppCompatActivity
         long SECONDS = 30 * 1000; // 30 seconds
         long alarmTime = currentTimeInMilliseconds + SECONDS;
 
-        alarmManager.set(AlarmManager.ELAPSED_REALTIME_WAKEUP, alarmTime, pendingIntent);
+        Calendar calendar = Calendar.getInstance();
+        calendar.set(Calendar.MINUTE, calendar.get(Calendar.MINUTE) + 1);
+
+        alarmManager.set(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), pendingIntent);*/
 //        alarmManager.setRepeating(AlarmManager.ELAPSED_REALTIME, alarmTime, SECONDS, pendingIntent);
 //        NoteReminderNotification.notify(this, noteTitle, noteText, mNoteId);
     }
@@ -870,7 +885,9 @@ public class NoteActivity extends AppCompatActivity
         @NonNull
         @Override
         public Dialog onCreateDialog(Bundle savedInstanceState) {
-            final Calendar c = getCalendar() != null ? getCalendar() : Calendar.getInstance();
+            Calendar currentCalendar = Calendar.getInstance();
+            currentCalendar.set(Calendar.MINUTE, currentCalendar.get(Calendar.MINUTE) + 2);
+            final Calendar c = getCalendar() != null ? getCalendar() : currentCalendar;
             int hour = c.get(Calendar.HOUR_OF_DAY);
             int minute = c.get(Calendar.MINUTE);
             return new TimePickerDialog(mContext, this, hour, minute, DateFormat.is24HourFormat(mContext));

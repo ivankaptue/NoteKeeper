@@ -4,6 +4,7 @@ import android.os.Parcel;
 import android.os.Parcelable;
 
 import java.time.LocalDateTime;
+import java.util.Calendar;
 
 /**
  * Created by Jim.
@@ -15,7 +16,7 @@ public final class NoteInfo implements Parcelable, Cloneable {
     private String mText;
     private int mId;
     private boolean reminderEnabled;
-    private LocalDateTime reminderDate;
+    private Calendar reminderDate;
 
     public NoteInfo(CourseInfo course, String title, String text) {
         mCourse = course;
@@ -76,11 +77,11 @@ public final class NoteInfo implements Parcelable, Cloneable {
         this.reminderEnabled = reminderEnabled;
     }
 
-    public LocalDateTime getReminderDate() {
+    public Calendar getReminderDate() {
         return reminderDate;
     }
 
-    public void setReminderDate(LocalDateTime reminderDate) {
+    public void setReminderDate(Calendar reminderDate) {
         this.reminderDate = reminderDate;
     }
 
