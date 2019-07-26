@@ -33,6 +33,10 @@ public class DatabaseDataWorker {
 
         insertNote("java_core", "Compiler options", "The -jar option isn't compatible with with the -cp option");
         insertNote("java_core", "Serialization", "Remember to include SerialVersionUID to assure version compatibility");
+
+        for (int i = 1; i <= 100; i++) {
+            insertNote("android_intents", "Note title " + i, "This is the note Text of loop notes " + i);
+        }
     }
 
     private void insertCourse(String courseId, String title) {
