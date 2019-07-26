@@ -33,6 +33,7 @@ public class NoteListFragment extends Fragment implements LoaderManager.LoaderCa
     private NoteRecyclerAdapter mNoteRecyclerAdapter;
     private Animation mScaleInAnim;
     private FloatingActionButton mFab;
+    private RecyclerView mRecyclerItems;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -45,21 +46,51 @@ public class NoteListFragment extends Fragment implements LoaderManager.LoaderCa
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.content_note_main, container, false);
-        RecyclerView recyclerItems = view.findViewById(R.id.list_items);
-        recyclerItems.setLayoutManager(new LinearLayoutManager(getContext()));
-        recyclerItems.setAdapter(mNoteRecyclerAdapter);
+        mRecyclerItems = view.findViewById(R.id.list_items);
+        mRecyclerItems.setLayoutManager(new LinearLayoutManager(getContext()));
+        mRecyclerItems.setAdapter(mNoteRecyclerAdapter);
 
         mFab = view.findViewById(R.id.fab);
         mFab.setOnClickListener(v -> startActivity(new Intent(getContext(), NoteActivity.class)));
         mScaleInAnim = AnimationUtils.loadAnimation(getContext(), R.anim.scale_in);
+
         return view;
     }
 
     @Override
     public void onResume() {
         super.onResume();
+        mRecyclerItems.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrollStateChanged(@NonNull RecyclerView recyclerView, int newState) {
+                /*if (newState == RecyclerView.SCROLL_STATE_IDLE) {
+                    mFab.show();
+                }*/
+                super.onScrollStateChanged(recyclerView, newState);
+            }
+
+            @Override
+            public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
+               /* if (dy > 0 || dy < 0 && mFab.isShown()) {
+                    mFab.hide();
+                }*/
+                if (dy > 0) {
+                    // scoll down
+                    mFab.hide();
+                } else if (dy < 0) {
+                    // scroll up
+                    mFab.show();
+                }
+                super.onScrolled(recyclerView, dx, dy);
+            }
+        });
         mFab.startAnimation(mScaleInAnim);
         LoaderManager.getInstance(this).restartLoader(NOTES_LOADER, null, this);
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
     }
 
     @Override
@@ -105,4 +136,5 @@ public class NoteListFragment extends Fragment implements LoaderManager.LoaderCa
             mNoteRecyclerAdapter.changeCursor(null);
         }
     }
+
 }
