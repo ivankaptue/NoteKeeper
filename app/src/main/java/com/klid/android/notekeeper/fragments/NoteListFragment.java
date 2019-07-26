@@ -7,6 +7,8 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
@@ -16,7 +18,6 @@ import androidx.loader.content.Loader;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
-import com.klid.android.notekeeper.MainActivity;
 import com.klid.android.notekeeper.NoteActivity;
 import com.klid.android.notekeeper.NoteKeeperProviderContract.Notes;
 import com.klid.android.notekeeper.NoteRecyclerAdapter;
@@ -30,6 +31,8 @@ public class NoteListFragment extends Fragment implements LoaderManager.LoaderCa
 
     public static final int NOTES_LOADER = 0;
     private NoteRecyclerAdapter mNoteRecyclerAdapter;
+    private Animation mScaleInAnim;
+    private FloatingActionButton mFab;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -46,15 +49,24 @@ public class NoteListFragment extends Fragment implements LoaderManager.LoaderCa
         recyclerItems.setLayoutManager(new LinearLayoutManager(getContext()));
         recyclerItems.setAdapter(mNoteRecyclerAdapter);
 
-        FloatingActionButton fab = view.findViewById(R.id.fab);
-        fab.setOnClickListener(v -> startActivity(new Intent(getContext(), NoteActivity.class)));
+        mFab = view.findViewById(R.id.fab);
+        mFab.setOnClickListener(v -> startActivity(new Intent(getContext(), NoteActivity.class)));
+        mScaleInAnim = AnimationUtils.loadAnimation(getContext(), R.anim.scale_in);
         return view;
     }
 
     @Override
     public void onResume() {
         super.onResume();
+        mFab.startAnimation(mScaleInAnim);
         LoaderManager.getInstance(this).restartLoader(NOTES_LOADER, null, this);
+    }
+
+    @Override
+    public void onDestroyView() {
+        Animation scaleOutAnim = AnimationUtils.loadAnimation(getContext(), R.anim.scale_out);
+        mFab.startAnimation(scaleOutAnim);
+        super.onDestroyView();
     }
 
     @NonNull
