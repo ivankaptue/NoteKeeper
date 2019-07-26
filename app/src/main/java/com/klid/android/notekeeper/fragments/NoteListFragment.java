@@ -3,27 +3,32 @@ package com.klid.android.notekeeper.fragments;
 import android.content.Intent;
 import android.database.Cursor;
 import android.os.Bundle;
+import android.os.Handler;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
+import android.widget.ProgressBar;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.loader.app.LoaderManager;
 import androidx.loader.content.CursorLoader;
 import androidx.loader.content.Loader;
+import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.klid.android.notekeeper.NoteActivity;
 import com.klid.android.notekeeper.NoteKeeperProviderContract.Notes;
 import com.klid.android.notekeeper.NoteRecyclerAdapter;
+import com.klid.android.notekeeper.NoteSwipeToDeleteCallback;
 import com.klid.android.notekeeper.R;
 
 import java.util.Objects;
+import java.util.TreeMap;
 
 public class NoteListFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor> {
 
@@ -34,25 +39,34 @@ public class NoteListFragment extends Fragment implements LoaderManager.LoaderCa
     private Animation mScaleInAnim;
     private FloatingActionButton mFab;
     private RecyclerView mRecyclerItems;
+    private ProgressBar mProgressBar;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Log.d(TAG, "onCreate: NoteFragment");
-        mNoteRecyclerAdapter = new NoteRecyclerAdapter(getContext(), null);
     }
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.content_note_main, container, false);
+
         mRecyclerItems = view.findViewById(R.id.list_items);
         mRecyclerItems.setLayoutManager(new LinearLayoutManager(getContext()));
+
+        mNoteRecyclerAdapter = new NoteRecyclerAdapter(getContext(), null, mRecyclerItems);
         mRecyclerItems.setAdapter(mNoteRecyclerAdapter);
+
+        ItemTouchHelper itemTouchHelper =
+            new ItemTouchHelper(new NoteSwipeToDeleteCallback(getContext(), mNoteRecyclerAdapter));
+        itemTouchHelper.attachToRecyclerView(mRecyclerItems);
 
         mFab = view.findViewById(R.id.fab);
         mFab.setOnClickListener(v -> startActivity(new Intent(getContext(), NoteActivity.class)));
         mScaleInAnim = AnimationUtils.loadAnimation(getContext(), R.anim.scale_in);
+
+        mProgressBar = view.findViewById(R.id.note_progress_bar);
 
         return view;
     }
@@ -74,10 +88,10 @@ public class NoteListFragment extends Fragment implements LoaderManager.LoaderCa
                /* if (dy > 0 || dy < 0 && mFab.isShown()) {
                     mFab.hide();
                 }*/
-                if (dy > 0) {
+                if (dy > 0 && mFab.isShown()) {
                     // scoll down
                     mFab.hide();
-                } else if (dy < 0) {
+                } else if (dy < 0 && !mFab.isShown()) {
                     // scroll up
                     mFab.show();
                 }
@@ -105,6 +119,7 @@ public class NoteListFragment extends Fragment implements LoaderManager.LoaderCa
     public Loader<Cursor> onCreateLoader(int id, @Nullable Bundle args) {
         Loader<Cursor> loader = null;
         if (id == NOTES_LOADER) {
+            mProgressBar.setVisibility(View.VISIBLE);
             final String[] noteColumns = {
                 Notes._ID,
                 Notes.COLUMN_NOTE_TITLE,
@@ -123,6 +138,7 @@ public class NoteListFragment extends Fragment implements LoaderManager.LoaderCa
     public void onLoadFinished(@NonNull Loader<Cursor> loader, Cursor data) {
         if (loader.getId() == NOTES_LOADER) {
             loadFinishedNotes(data);
+            new Handler().postDelayed(() -> mProgressBar.setVisibility(View.GONE), 500);
         }
     }
 

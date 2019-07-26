@@ -33,7 +33,7 @@
 				style="?android:attr/progressBarStyleHorizontal"
 				android:layout_width="0dp"
 				android:layout_height="wrap_content"
-				android:id="@+id/progress_bar" android:max="100" android:layout_marginEnd="16dp"
+				android:id="@+id/note_progress_bar" android:max="100" android:layout_marginEnd="16dp"
 				android:layout_marginStart="16dp"
 				app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toBottomOf="@+id/text_note_title"
 				tools:visibility="visible" app:layout_constraintEnd_toStartOf="@+id/guideline"
@@ -64,7 +64,7 @@
 				android:text="@string/note_reminder_enabled"
 				android:layout_width="wrap_content"
 				android:layout_height="wrap_content" android:id="@+id/note_reminder_checkbox"
-				app:layout_constraintTop_toBottomOf="@+id/progress_bar" android:layout_marginTop="16dp"
+				app:layout_constraintTop_toBottomOf="@+id/note_progress_bar" android:layout_marginTop="16dp"
 				app:layout_constraintStart_toStartOf="@+id/text_note_title"/>
 		<LinearLayout
 				android:orientation="horizontal"

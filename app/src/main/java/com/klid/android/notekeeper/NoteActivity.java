@@ -753,7 +753,7 @@ public class NoteActivity extends AppCompatActivity
         @Override
         protected void onPreExecute() {
             NoteActivity activity = mActivityReference.get();
-            ProgressBar mProgressBar = activity.findViewById(R.id.progress_bar);
+            ProgressBar mProgressBar = activity.findViewById(R.id.note_progress_bar);
             mProgressBar.setVisibility(View.VISIBLE);
             mProgressBar.setProgress(0);
         }
@@ -801,7 +801,7 @@ public class NoteActivity extends AppCompatActivity
 
         private ProgressBar getProgressBar() {
             NoteActivity activity = mActivityReference.get();
-            return activity.findViewById(R.id.progress_bar);
+            return activity.findViewById(R.id.note_progress_bar);
         }
     }
 

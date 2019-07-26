@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
+import android.os.AsyncTask;
 import android.preference.PreferenceManager;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -11,8 +12,10 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
+import com.google.android.material.snackbar.Snackbar;
 import com.klid.android.notekeeper.NoteKeeperDatabaseContract.CourseInfoEntry;
 import com.klid.android.notekeeper.NoteKeeperDatabaseContract.NoteInfoEntry;
+import com.klid.android.notekeeper.NoteKeeperProviderContract.Notes;
 
 public class NoteRecyclerAdapter extends RecyclerView.Adapter<NoteRecyclerAdapter.ViewHolder> {
 
@@ -23,13 +26,18 @@ public class NoteRecyclerAdapter extends RecyclerView.Adapter<NoteRecyclerAdapte
     private int mNoteTitlePos;
     private int mIdPos;
     private final SharedPreferences mPrefs;
+    private int mDeletedNoteId;
+    private int mDeletedNotePosition;
+    private final RecyclerView mRecyclerView;
 
-    public NoteRecyclerAdapter(Context context, Cursor cursor) {
+    public NoteRecyclerAdapter(Context context, Cursor cursor, RecyclerView recyclerView) {
         mContext = context;
         mCursor = cursor;
         mLayoutInflater = LayoutInflater.from(mContext);
         populateColumnPositions();
         mPrefs = PreferenceManager.getDefaultSharedPreferences(mContext);
+        mRecyclerView = recyclerView;
+
     }
 
     private void populateColumnPositions() {
@@ -74,6 +82,50 @@ public class NoteRecyclerAdapter extends RecyclerView.Adapter<NoteRecyclerAdapte
     @Override
     public int getItemCount() {
         return mCursor == null ? 0 : mCursor.getCount();
+    }
+
+    public void deleteItem(int position) {
+        if (isCursorValid()) {
+            mCursor.moveToPosition(position);
+            mDeletedNoteId = mCursor.getInt(mIdPos);
+            mDeletedNotePosition = position;
+            notifyItemRemoved(position);
+            showUndoSnackbar();
+        }
+    }
+
+    private void showUndoSnackbar() {
+        Snackbar snackbar = Snackbar.make(mRecyclerView, "Note deleted",
+            Snackbar.LENGTH_LONG);
+        snackbar.setAction("Undo", v -> undoDelete());
+        snackbar.addCallback(new Snackbar.Callback(){
+            @Override
+            public void onDismissed(Snackbar transientBottomBar, int event) {
+                super.onDismissed(transientBottomBar, event);
+                deleteNoteFromDatabase(mDeletedNoteId);
+            }
+        });
+        snackbar.show();
+    }
+
+    private void undoDelete() {
+        notifyItemInserted(mDeletedNotePosition);
+    }
+
+    private void deleteNoteFromDatabase(int noteId) {
+        final String selection = NoteInfoEntry._ID + " = ?";
+        final String[] selectionArgs = {Integer.toString(noteId)};
+
+
+        AsyncTask task = new AsyncTask() {
+            @Override
+            protected Object doInBackground(Object[] objects) {
+                mContext.getContentResolver().delete(Notes.CONTENT_URI, selection, selectionArgs);
+                return null;
+            }
+        };
+
+        task.execute();
     }
 
     public class ViewHolder extends RecyclerView.ViewHolder {
